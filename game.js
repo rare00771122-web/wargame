@@ -102,9 +102,11 @@ const redUnits = [];
 const blueSquads = [];
 const redSquads = [];
 
-// =====================
-// ユニット生成
-// =====================
+/**
+ * ユニット生成
+ * 歩兵・砲兵の初期能力や状態を設定する
+ * 地形に埋まる場合は安全位置へ補正する
+ */
 function createUnit(x, y, type, color) {
 
   let tries = 0;
@@ -145,9 +147,11 @@ function createUnit(x, y, type, color) {
   };
 }
 
-// =====================
-// 初期配置
-// =====================
+/**
+ * 初期ユニット配置
+ * 青軍・赤軍をマップ上へ配置する
+ * 開始時の戦線バランスをここで調整する
+ */
 function createUnits() {
   blueUnits.length = 0;
   redUnits.length = 0;
@@ -237,9 +241,10 @@ function createUnits() {
   redUnits.push(createUnit(930, 550, "soldier", "red"));
 }
 
-// =====================
-// 小隊生成
-// =====================
+/**
+ * 小隊データ生成
+ * AI制御や部隊単位行動に使用する
+ */
 function createSquads() {
   blueSquads.length = 0;
   redSquads.length = 0;
@@ -267,9 +272,10 @@ function makeSquad(name, team, units, tx, ty) {
   };
 }
 
-// =====================
-// 描画
-// =====================
+/**
+ * 蛇行した上部河川を描画
+ * 川は通行制限地形としても機能する
+ */
 function drawMap() {
   // 草原
   ctx.fillStyle = "#27b043";
@@ -300,9 +306,10 @@ function drawTopRiver() {
   ctx.stroke();
 }
 
-// =====================
-// 湖
-// =====================
+/**
+ * 湖描画
+ * ユニット進入不可地形
+ */
 function drawLake() {
   ctx.fillStyle = "#169ddb";
 
@@ -317,9 +324,10 @@ function drawLake() {
   ctx.fill();
 }
 
-// =====================
-// 橋
-// =====================
+/**
+ * 橋描画
+ * 川を安全に渡れる通行ポイント
+ */
 function drawBridges() {
   ctx.fillStyle = "#b37a48";
 
@@ -334,8 +342,10 @@ function drawBridges() {
 }
 
 
-
-// 川近接判定
+/**
+ * 指定座標が川付近か判定
+ * 川侵入禁止や橋通行判定で使用する
+ */
 function isNearRiver(x, y) {
 
   const riverWidth = 16; // 川半幅
@@ -374,6 +384,11 @@ function isNearRiver(x, y) {
   return false;
 }
 
+/**
+ * 首都マーカー用の星を描画
+ * 青軍・赤軍の本拠地を視覚的に強調する
+ * 外枠を付けてマップ上で目立たせる
+ */
 function drawStar(x, y, size, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -403,11 +418,20 @@ function drawStar(x, y, size, color) {
   ctx.stroke();
 }
 
+/**
+ * 両軍の首都を描画
+ * 星型マーカーで本拠地を表示する
+ */
 function drawCapitals() {
   drawStar(blueCapital.x, blueCapital.y, 28, "blue");
   drawStar(redCapital.x, redCapital.y, 28, "red");
 }
 
+/**
+ * 占領可能な町を描画
+ * 支配勢力によって色が変化し、
+ * 回復拠点としても機能する
+ */
 function drawTowns() {
 
   for (let t of towns) {
@@ -426,7 +450,10 @@ function drawTowns() {
   }
 }
 
-// 町の占領判定
+/**
+ * 町占領判定
+ * 一定距離にいるユニット側へ所有権を変更する
+ */
 function captureTowns() {
 
   for (let t of towns) {
@@ -457,6 +484,11 @@ function captureTowns() {
   }
 }
 
+/**
+ * ユニットHPバー描画
+ * 現在HPを割合表示し、
+ * 戦闘状況を視覚的に分かりやすくする
+ */
 function drawHpBar(x, y, hp, maxHp) {
   ctx.fillStyle = "black";
   ctx.fillRect(x - 14, y - 18, 28, 4);
@@ -465,7 +497,10 @@ function drawHpBar(x, y, hp, maxHp) {
   ctx.fillRect(x - 14, y - 18, 28 * (hp / maxHp), 4);
 }
 
-// 白変化・点滅なし。状態変化は本体色のみ。
+/**
+ * 全ユニット描画
+ * 兵種・戦闘状態・選択状態を視覚化する
+ */
 function drawUnits(units) {
 
   for (let u of units) {
@@ -521,6 +556,11 @@ function drawUnits(units) {
   }
 }
 
+/**
+ * タイトルシーン描画
+ * ゲーム名とスタートUIを表示し、
+ * プレイ開始待機状態を構成する
+ */
 function drawTitle() {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, 1000, 600);
@@ -540,6 +580,11 @@ function drawTitle() {
   ctx.textAlign = "left";
 }
 
+/**
+ * フレーム描画処理
+ * タイトル画面・ゲーム画面・UI・
+ * ゲーム終了演出をまとめて描画する
+ */
 function draw() {
   if (gameState === "title") {
     drawTitle();
@@ -590,9 +635,10 @@ function draw() {
   }
 }
 
-// =====================
-// ゲーム更新
-// =====================
+/**
+ * ゲーム更新処理
+ * 移動・戦闘・士気・回復などを毎フレーム更新する
+ */
 function update() {
   if (gameState !== "play") return;
   if (gameOver) return;
@@ -620,9 +666,10 @@ function update() {
   checkGameResult();
 }
 
-// =====================
-// 移動
-// =====================
+/**
+ * プレイヤー軍移動処理
+ * 移動命令または攻撃追尾に従って前進する
+ */
 function moveBluePlayer() {
 
   for (let u of blueUnits) {
@@ -674,7 +721,10 @@ function moveBluePlayer() {
   }
 }
 
-// 敵AI
+/**
+ * 敵AI行動
+ * 敵接近時のみ迎撃し、離れると防衛位置へ戻る
+ */
 function moveRedAI() {
   const alertRange = 180;
   const leashRange = 260;
@@ -739,9 +789,10 @@ function moveRedAI() {
   }
 }
 
-// =====================
-// 戦闘
-// =====================
+/**
+ * 攻撃処理
+ * 射程内の敵へ継続ダメージを与える
+ */
 function attackArmy(units, enemies) {
   for (let u of units) {
     if (!u.alive) continue;
@@ -772,10 +823,11 @@ function attackArmy(units, enemies) {
   }
 }
 
-// =====================
-// 山侵入禁止 + 川侵入禁止（橋だけ通行可）
-// moveToward() 内で使う
-// =====================
+/**
+ * 通行不可地形判定
+ * 山・湖・川への侵入を禁止する
+ * 橋周辺のみ川通行を許可する
+ */
 function isBlockedTerrain(x, y) {
 
   // 山
@@ -819,6 +871,11 @@ function updateMoraleAll() {
   updateMoraleArmy(redUnits, blueUnits, redCapital);
 }
 
+/**
+ * 士気更新
+ * 被害・孤立・包囲・首都接近などで変動する
+ * 士気低下時は潰走、高揚時は狂戦士化する
+ */
 function updateMoraleArmy(units, enemies, capital) {
   const alive = units.filter(u => u.alive);
 
@@ -867,9 +924,10 @@ function updateMoraleArmy(units, enemies, capital) {
   }
 }
 
-// =====================
-// 補助
-// =====================
+/**
+ * 指定ユニット周囲の味方・敵数を数える
+ * 自身を除外して一定距離内のみ判定する
+ */
 function countNearby(unit, group, range) {
   let n = 0;
 
@@ -886,6 +944,10 @@ function countNearby(unit, group, range) {
   return n;
 }
 
+/**
+ * 指定ユニットに最も近い敵を取得
+ * 敵AIの迎撃行動や追尾対象決定に使用する
+ */
 function findNearestEnemy(unit, enemies) {
   let best = null;
   let bestDist = 99999;
@@ -906,6 +968,10 @@ function findNearestEnemy(unit, enemies) {
   return best;
 }
 
+/**
+ * 同軍ユニット押し出し
+ * 密集による重なりを防止する
+ */
 function separateUnits(units) {
   for (let i = 0; i < units.length; i++) {
     let a = units[i];
@@ -932,6 +998,10 @@ function separateUnits(units) {
   }
 }
 
+/**
+ * 敵味方ユニット押し出し
+ * 白兵接触時の過度な重なりを防ぐ
+ */
 function separateMixed(teamA, teamB) {
   for (let a of teamA) {
     if (!a.alive) continue;
@@ -956,11 +1026,19 @@ function separateMixed(teamA, teamB) {
   }
 }
 
+/**
+ * blocked状態リセット
+ * 接触・衝突判定前に全ユニットの移動停止状態を解除する
+ */
 function blockEnemyContact() {
   for (let b of blueUnits) if (b.alive) b.blocked = false;
   for (let r of redUnits) if (r.alive) r.blocked = false;
 }
 
+/**
+ * 回復処理
+ * 首都や町付近で徐々にHP回復する
+ */
 function healUnits() {
   for (let u of [...blueUnits, ...redUnits]) {
     if (!u.alive) continue;
@@ -981,7 +1059,10 @@ function healUnits() {
 }
 
 
-
+/**
+ * マップ境界制御
+ * ユニット座標をプレイエリア内へ固定する
+ */
 function keepInsideMap(u) {
   const r = u.type === "artillery" ? 14 : 12;
 
@@ -992,6 +1073,10 @@ function keepInsideMap(u) {
   if (u.y > 600 - r) u.y = 600 - r;
 }
 
+/**
+ * 町エリア内判定
+ * ユニットが町の効果範囲内にいるか確認する
+ */
 function isOnTown(unit) {
   for (let t of towns) {
     const dx = unit.x - t.x;
@@ -1004,6 +1089,10 @@ function isOnTown(unit) {
   return false;
 }
 
+/**
+ * 首都エリア内判定
+ * ユニットが本拠地の効果範囲内にいるか確認する
+ */
 function isOnCapital(unit) {
   const cap = unit.color === "blue" ? blueCapital : redCapital;
 
@@ -1014,6 +1103,10 @@ function isOnCapital(unit) {
   return dist < 35;
 }
 
+/**
+ * 勝敗判定
+ * 全滅または首都制圧でゲーム終了
+ */
 function checkGameResult() {
 
   const aliveBlue = blueUnits.filter(u => u.alive);
@@ -1070,9 +1163,10 @@ function checkGameResult() {
   }
 }
 
-// =====================
-// 操作
-// =====================
+/**
+ * 陣形移動命令
+ * 選択ユニットへ隊形を維持した移動先を設定する
+ */
 function applyFormationTargets(cx, cy) {
 
   const units = selectedUnits.filter(u => u.alive);
@@ -1116,7 +1210,10 @@ function applyFormationTargets(cx, cy) {
   }
 }
 
-// 山描画
+/**
+ * 山岳地形描画
+ * 複数岩オブジェクトで山塊を表現する
+ */
 function drawMountains() {
 
   for (let m of mountains) {
@@ -1171,7 +1268,10 @@ function drawRock(x, y, r) {
   ctx.stroke();
 }
 
-// 山判定（四角形）
+/**
+ * 山侵入判定
+ * 楕円形当たり判定で山地を表現する
+ */
 function isOnMountain(x, y) {
 
   for (let m of mountains) {
@@ -1193,6 +1293,12 @@ function isOnMountain(x, y) {
   return false;
 }
 
+/**
+ * スライド移動処理
+ * 障害物へ衝突した際、
+ * 壁沿いへ滑るように移動する
+ * RTS特有の自然な経路移動を再現する
+ */
 function moveUnitWithSlide(u, dx, dy) {
 
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1235,7 +1341,10 @@ function moveUnitWithSlide(u, dx, dy) {
   }
 }
 
-
+/**
+ * マウスクリックイベント
+ * タイトル画面でゲーム開始処理を実行する
+ */
 canvas.addEventListener("click", function (e) {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -1255,6 +1364,12 @@ canvas.addEventListener("click", function (e) {
   }
 });
 
+/**
+ * プレイヤー入力処理
+ * 敵クリック時は攻撃命令、
+ * 味方クリック時は選択、
+ * それ以外はドラッグ選択を開始する
+ */
 canvas.addEventListener("mousedown", function (e) {
 
   if (gameState !== "play") return;
@@ -1316,6 +1431,11 @@ canvas.addEventListener("mousedown", function (e) {
   isDragging = true;
 });
 
+/**
+ * 同兵種一括選択処理
+ * ダブルクリックしたユニットと同タイプの
+ * 味方ユニットを全選択する
+ */
 canvas.addEventListener("dblclick", function (e) {
 
   if (gameState !== "play") return;
@@ -1349,6 +1469,10 @@ canvas.addEventListener("dblclick", function (e) {
 
 });
 
+/**
+ * 範囲選択更新処理
+ * ドラッグ中の選択矩形サイズをリアルタイム更新する
+ */
 canvas.addEventListener("mousemove", function (e) {
   if (!isDragging) return;
 
@@ -1358,6 +1482,11 @@ canvas.addEventListener("mousemove", function (e) {
   dragEndY = e.clientY - rect.top;
 });
 
+/**
+ * 範囲選択確定処理
+ * ドラッグ矩形内に存在する味方ユニットを
+ * 選択リストへ追加する
+ */
 canvas.addEventListener("mouseup", function () {
   if (!isDragging) return;
 
@@ -1383,6 +1512,11 @@ canvas.addEventListener("mouseup", function () {
   }
 });
 
+/**
+ * 右クリック入力
+ * 指定地点へ部隊移動命令を出し、
+ * 現在陣形に応じた配置目標を設定する
+ */
 canvas.addEventListener("contextmenu", function (e) {
   e.preventDefault();
 
@@ -1399,6 +1533,11 @@ canvas.addEventListener("contextmenu", function (e) {
   applyFormationTargets(mx, my);
 });
 
+/**
+ * ショートカットキー処理
+ * 数字キーで陣形変更、
+ * Rキーでゲームをリスタートする
+ */
 window.addEventListener("keydown", function (e) {
   if (e.key === "1") currentFormation = "line";
   if (e.key === "2") currentFormation = "column";
@@ -1407,9 +1546,10 @@ window.addEventListener("keydown", function (e) {
   if (e.key === "r" || e.key === "R") location.reload();
 });
 
-// =====================
-// ループ
-// =====================
+/**
+ * メインゲームループ
+ * 毎フレーム更新と描画を繰り返す
+ */
 function gameLoop() {
   update();
   draw();
